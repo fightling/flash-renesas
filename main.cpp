@@ -105,7 +105,20 @@ int main(int _argc, char *_argv[])
     }
     _out << "remote version: " << _version << endl;
     // unlock the microcontroller with the ID given by argument
-    if( (_id.isEmpty() && Connection::Ready != _c.unlock(_id=QByteArray(7,0)) && Connection::Ready != _c.unlock(_id=QByteArray(7,0))) || Connection::Ready != _c.unlock(_id) )
+    if( _id.isEmpty() )
+    {
+      _id = QByteArray(7,0); 
+      if( Connection::Ready != _c.unlock(_id) )
+      {
+        _id = QByteArray(7,0xff); 
+        if( Connection::Ready != _c.unlock(_id) )
+        {
+          _err << "ERROR: unlocking failed" << endl;
+          exit(-1);
+        }
+      }
+    }
+    else if( Connection::Ready != _c.unlock(_id) )
     {
       _err << "ERROR: unlocking failed" << endl;
       exit(-1);
