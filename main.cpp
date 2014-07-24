@@ -59,6 +59,7 @@ int main(int _argc, char *_argv[])
       _port = _args[1];
   }
   QByteArray _id;
+  if( _args.size() > 2 )
   {
     // split argument into hopefully seven hexadecimal strings
     QStringList _ids = _args[2].split(':');
@@ -109,7 +110,7 @@ int main(int _argc, char *_argv[])
       _err << "ERROR: unlocking failed" << endl;
       exit(-1);
     }
-    _out << "unlocked with: " << _id.toHex();
+    _out << "unlocked with: " << _id.toHex() << endl;
     // eraseAll
     _out << "erasing flash memory..." << endl;
     if( Connection::Ready != _c.eraseAll() )
