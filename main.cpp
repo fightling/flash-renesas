@@ -109,7 +109,7 @@ int main(int _argc, char *_argv[])
       _err << "ERROR: unlocking failed" << endl;
       exit(-1);
     }
-    _out << "unlocked with: " << _id;
+    _out << "unlocked with: " << _id.toHex();
     // eraseAll
     _out << "erasing flash memory...";
     if( Connection::Ready != _c.eraseAll() )
