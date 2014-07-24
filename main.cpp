@@ -137,7 +137,7 @@ int main(int _argc, char *_argv[])
   // blank page
   const QByteArray _blank(0x100,0xff);
   unsigned long _start = file.readImage(_image);
-  _out << "Writing image from" << HEX(_start) << "to" << HEX(_start+_image.size()) << "=" << HEX(_image.size()) << "bytes" << endl;
+  _out << "Writing image from " << HEX(_start) << " to " << HEX(_start+_image.size()) << " = " << _image.size()/1024 << "KB" << endl;
   unsigned long _count=0;
   for( int _cur = 0; _cur < _image.size(); _cur += 0x100)
   {
@@ -146,7 +146,7 @@ int main(int _argc, char *_argv[])
     {
       if( !_port.isEmpty() )
       {
-        _out << "Writing page at " << HEX(_start + _cur) << "\r" << flush;
+        _out << "Writing page at address " << HEX(_start + _cur) << "\r" << flush;
         if( Connection::Ready != _c.programPage( _start + _cur, _page ) )
         {
           _err << "ERROR: programming page failed" << endl;

@@ -125,6 +125,7 @@ namespace Fkgo
       }
       _alternatives[] =
       {
+        { BAUD_115200, BAUD115200 },
         { BAUD_57600, BAUD57600 },
         { BAUD_38400, BAUD38400 },
         { BAUD_19200, BAUD19200 },
@@ -134,6 +135,7 @@ namespace Fkgo
       // try to improve the baud rate
       for( size_t i=0; _alternatives[i].cmd_; ++i )
       {
+        qDebug() << "Connection::Connection: asking for baud rate " << _alternatives[i].sys_;
         // send baud rate command
         write(_alternatives[i].cmd_);
         QThread::msleep(10);
