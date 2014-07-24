@@ -6,6 +6,8 @@ Programmer for M16C micro controller.
 Prerequisites
 -------------
 
+You must have installed the QT 5.3 runtime (see http://qt-project.org/downloads).
+
 Download, build and install qextserialport library from google code:
 
 ```
@@ -25,7 +27,7 @@ Installation
   qmake flasher-renesas.pro
   make
 ```
-You'll find the binary in ./unix/release/flasher-renesas/bin/.
+You'll find the binary in ```./unix/release/flasher-renesas/bin/```.
 
 Usage
 -----
@@ -48,8 +50,8 @@ To program a micro processor via serial port use:
   flasher-renesas image.mot /dev/ttyUSB0
 ```
 
-The program will try to unlock with the following IDs if needed: 00:00:00:00:00:00:00 and FF:FF:FF:FF:FF:FF:FF.
-Replace the /dev/ttyUSB0 by your devce path or COM1, COM2. Append a explicit ID to unlock the processor:
+The program will try to unlock with the following IDs if needed: ```00:00:00:00:00:00:00``` and ```FF:FF:FF:FF:FF:FF:FF```.
+Replace the ```/dev/ttyUSB0``` by your devce path or ```COM1```, ```COM2```. Append a explicit ID to unlock the processor:
 
 ```
   flasher-renesas image.mot /dev/ttyUSB0 1:12:23:34:45:56:67
