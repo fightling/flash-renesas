@@ -55,6 +55,7 @@ namespace Fkgo
       void close();
       /// initiate communication at low baud rate
       Status autoBaud();
+      /// return currently used baud rate
       BaudRateType baud() const;
       /// negotiate optimal baud rate
       Status baudRate();
@@ -62,6 +63,7 @@ namespace Fkgo
       Status version( QString& _version );
       /// query current status from microcontroller
       Status status();
+      /// poll up to 16 tyimes for status until remote side reports Ready
       Status waitForReady();
       /// unlock microcontroller with given ID
       Status unlock(const QByteArray& _id );
