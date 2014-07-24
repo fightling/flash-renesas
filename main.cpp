@@ -28,7 +28,7 @@ int main(int _argc, char *_argv[])
     _parser.addVersionOption();
     _parser.addPositionalArgument("mot", QCoreApplication::translate("main", "MOT file to flash."));
     _parser.addPositionalArgument("port", QCoreApplication::translate("main", "Serial port to connect."));
-    _parser.addPositionalArgument("id", QCoreApplication::translate("main", "Flash ID (default: 00:00:00:00:00:00:00)"),"[id]");
+    _parser.addPositionalArgument("id", QCoreApplication::translate("main", "Flash ID (default: 00:00:00:00:00:00:00 or ff:ff:ff:ff:ff:ff:ff)"),"[id]");
   }
   // Process the actual command line arguments given by the user
   _parser.process(_a);
@@ -60,25 +60,19 @@ int main(int _argc, char *_argv[])
   }
   QByteArray _id;
   {
-    // correct missing 3rd argument
-    if( _args.size() < 3 )
-      _id = QByteArray(7,0);
-    else
+    // split argument into hopefully seven hexadecimal strings
+    QStringList _ids = _args[2].split(':');
+    // convert hexadecimal strings into a number array
+    bool ok = true;
+    for( int i=0; i<_ids.size() && ok; ++i )
+      _id += _ids[i].toInt(&ok,16);
+    // check if there wern't seven bytes
+    if( !ok || _id.size() != 7 )
     {
-      // split argument into hopefully seven hexadecimal strings
-      QStringList _ids = _args[2].split(':');
-      // convert hexadecimal strings into a number array
-      bool ok = true;
-      for( int i=0; i<_ids.size() && ok; ++i )
-        _id += _ids[i].toInt(&ok,16);
-      // check if there wern't seven bytes
-      if( !ok || _id.size() != 7 )
-      {
-        // invalid ID
-        _err << "ERROR: invalid ID" << endl;
-        // exit program
-        exit(-1);
-      }
+      // invalid ID
+      _err << "ERROR: invalid ID" << endl;
+      // exit program
+      exit(-1);
     }
   }
   using namespace Fkgo::Programmer;
@@ -108,14 +102,16 @@ int main(int _argc, char *_argv[])
       _err << "ERROR: cannot get version" << endl;
       exit(-1);
     }
-    qDebug() << "remote version:" << _version;
+    _out << "remote version: " << _version;
     // unlock the microcontroller with the ID given by argument
-    if( Connection::Ready != _c.unlock(_id) )
+    if( (_id.isEmpty() && Connection::Ready != _c.unlock(_id=QByteArray(7,0)) && Connection::Ready != _c.unlock(_id=QByteArray(7,0))) || Connection::Ready != _c.unlock(_id) )
     {
       _err << "ERROR: unlocking failed" << endl;
       exit(-1);
     }
+    _out << "unlocked with: " << _id;
     // eraseAll
+    _out << "erasing flash memory...";
     if( Connection::Ready != _c.eraseAll() )
     {
       _err << "ERROR: erasing flash memory failed" << endl;
