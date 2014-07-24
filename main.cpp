@@ -147,7 +147,7 @@ int main(int _argc, char *_argv[])
   // blank page
   const QByteArray _blank(0x100,0xff);
   unsigned long _start = file.readImage(_image);
-  _out << "Writing image from " << HEX(_start) << " to " << HEX(_start+_image.size()) << " = " << _image.size()/1024 << "KB" << endl;
+  _out << "Writing image from " << HEX(_start) << " to " << HEX(_start+_image.size()-1) << " = " << _image.size()/1024 << "KB" << endl;
   unsigned long _count=0;
   for( int _cur = 0; _cur < _image.size(); _cur += 0x100)
   {
