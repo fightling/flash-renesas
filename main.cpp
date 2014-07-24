@@ -102,7 +102,7 @@ int main(int _argc, char *_argv[])
       _err << "ERROR: cannot get version" << endl;
       exit(-1);
     }
-    _out << "remote version: " << _version;
+    _out << "remote version: " << _version << endl;
     // unlock the microcontroller with the ID given by argument
     if( (_id.isEmpty() && Connection::Ready != _c.unlock(_id=QByteArray(7,0)) && Connection::Ready != _c.unlock(_id=QByteArray(7,0))) || Connection::Ready != _c.unlock(_id) )
     {
@@ -111,7 +111,7 @@ int main(int _argc, char *_argv[])
     }
     _out << "unlocked with: " << _id.toHex();
     // eraseAll
-    _out << "erasing flash memory...";
+    _out << "erasing flash memory..." << endl;
     if( Connection::Ready != _c.eraseAll() )
     {
       _err << "ERROR: erasing flash memory failed" << endl;
