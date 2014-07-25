@@ -149,7 +149,7 @@ namespace Fkgo
       }
       _alternatives[] =
       {
-        { BAUD_115200, BAUD115200 },
+//        { BAUD_115200, BAUD115200 },
         { BAUD_57600, BAUD57600 },
         { BAUD_38400, BAUD38400 },
         { BAUD_19200, BAUD19200 },
