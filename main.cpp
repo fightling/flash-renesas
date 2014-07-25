@@ -17,7 +17,7 @@ int main(int _argc, char *_argv[])
   // make application instance
   QCoreApplication _a(_argc, _argv);
   {
-    _a.setApplicationName("m16c-flasher-utility");
+    _a.setApplicationName("flash-renesas");
     _a.setApplicationVersion("0.1");
   }
   // initialize argument parser
