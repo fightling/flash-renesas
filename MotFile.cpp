@@ -20,7 +20,9 @@ namespace Fkgo
       SRecord _record = read();
       while( !_record.isData() )
         _record = read();
-      unsigned long _start = _record.address();
+      unsigned long _pre = _record.address() % 0x100;
+      unsigned long _start = _record.address() - _pre;
+      _image.append( QByteArray( _pre, 0xff ) );
       qDebug() << "MotFile::readImage: starting image at" << QString::number(_start,16);
       while( !_record.isEmpty() || _record.type() >= SRecord::Start32 )
       {
