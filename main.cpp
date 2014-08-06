@@ -4,6 +4,8 @@
 #include <QCommandLineParser>
 #include <QDebug>
 #include <QString>
+#include <QFileInfo>
+#include <QDateTime>
 
 #define HEX(x) QString::number(x,16)
 
@@ -131,6 +133,10 @@ int main(int _argc, char *_argv[])
       _err << "ERROR: erasing flash memory failed" << endl;
       exit(-1);
     }
+  }
+  {
+    QFileInfo info(_mot);
+    _out << "Opening MOT file: '" << info.fileName() << "'  " << info.lastModified().toString() << endl;
   }
   MotFile file(_mot);
   if( !file.open(QIODevice::ReadOnly | QIODevice::Text) )
