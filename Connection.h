@@ -1,4 +1,3 @@
-#include <QObject>
 #include <qextserialport.h>
 
 namespace Fkgo
@@ -7,9 +6,8 @@ namespace Fkgo
   namespace Programmer
   {
     /// connection to program a flashable microcontroller
-    struct Connection : QObject
+    struct Connection 
     {
-      Q_OBJECT
     public:
       /// connection status
       enum Status
