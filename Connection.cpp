@@ -60,13 +60,13 @@ namespace Fkgo
       if( 0 == port_ )
       {
         // create port instance
-        port_ = new QextSerialPort(portName_, QextSerialPort::Polling);
+        port_ = new QSerialPort(portName_);
         // setup port
         qDebug() << "Connection::Connection: set baud rate to 9600/8N1";
-        port_->setBaudRate(BAUD9600);
-        port_->setStopBits(STOP_1);
-        port_->setParity(PAR_NONE);
-        port_->setDataBits(DATA_8);
+        port_->setBaudRate(QSerialPort::Baud9600);
+        port_->setStopBits(QSerialPort::OneStop);
+        port_->setParity(QSerialPort::NoParity);
+        port_->setDataBits(QSerialPort::Data8);
         // opern port
         if (port_->open(QIODevice::ReadWrite) == true)
           qDebug() << "Connection::Connection: successfully opened port" << _portName;
@@ -105,7 +105,7 @@ namespace Fkgo
       for( int i=0; i<16; ++i )
       {
         // write null byte
-        if( E_NO_ERROR != write(0) )
+        if( write(0) != 1 )
         {
           qDebug() << "Connection::autoBaud: cannot write";
           return NotConnected;
@@ -125,9 +125,9 @@ namespace Fkgo
       // set baud rate to 9600
       qDebug() << "Connection::baudRate: set baud rate to 9600";
       // ensure basic baud rate
-      port_->setBaudRate(BAUD9600);
+      port_->setBaudRate(QSerialPort::Baud9600);
       // send baud rate 9600 command
-      if( E_NO_ERROR != write(BAUD_9600) )
+      if( write(BAUD_9600) != 1 )
       {
         qDebug() << "Connection::baudRate: not connected";
         return NotConnected;
@@ -145,16 +145,16 @@ namespace Fkgo
         /// command to send to remote side
         char cmd_;
         /// local system baud rate
-        BaudRateType sys_;
+        QSerialPort::BaudRate sys_;
       }
       _alternatives[] =
       {
 //        { BAUD_115200, BAUD115200 },
-        { BAUD_57600, BAUD57600 },
-        { BAUD_38400, BAUD38400 },
-        { BAUD_19200, BAUD19200 },
+        { BAUD_57600, QSerialPort::Baud57600 },
+        { BAUD_38400, QSerialPort::Baud38400 },
+        { BAUD_19200, QSerialPort::Baud19200 },
         // sentinel
-        { 0,BAUD9600 },
+        { 0,QSerialPort::Baud9600 },
       };
       // try to improve the baud rate
       for( size_t i=0; _alternatives[i].cmd_; ++i )
@@ -176,21 +176,20 @@ namespace Fkgo
       }
       return Ready;
     }
-    BaudRateType Connection::baud() const
+    QSerialPort::BaudRate Connection::baud() const
     {
       if( 0 == port_ )
         // Mama!
-        return BAUD9600;
+        return QSerialPort::Baud9600;
       // return baud rate from port instance
-      return port_->baudRate();
+      return (QSerialPort::BaudRate)port_->baudRate();
     }
     Connection::Status Connection::version( QString& _version )
     {
       qDebug() << "Connection::version: asking for remote version";
       // write command:: get version
-      qint64 _err = write(GET_VERSION);
       // check for error
-      if( E_NO_ERROR != _err )
+      if( write(GET_VERSION) != 1 )
       {
         // clear result
         _version.clear();
@@ -215,9 +214,7 @@ namespace Fkgo
           QThread::msleep( 1000 );
         }
         // write command: get status
-        qint64 _err = write(GET_STATUS);
-        // check for error
-        if( E_NO_ERROR != _err )
+        if( write(GET_STATUS) != 1 )
           return NotConnected;
         // read response
         QByteArray result = read();
@@ -292,9 +289,7 @@ namespace Fkgo
       _seq += (char)_id.size();
       _seq += _id;
       // write command sequence
-      qint64 _err = write(_seq);
-      // check for error
-      if( E_NO_ERROR != _err )
+      if( write(_seq) != _seq.size() )
         return NotConnected;
       // wait for ready
       return waitForReady();
@@ -302,9 +297,7 @@ namespace Fkgo
     Connection::Status Connection::eraseAll()
     {
       // write command: clear status
-      qint64 _err = write(CLEAR_STATUS);
-      // check for error
-      if( E_NO_ERROR != _err )
+      if( write(CLEAR_STATUS) != 1 )
         return NotConnected;
       // prepare erase all command sequence
       QByteArray _seq;
@@ -313,9 +306,7 @@ namespace Fkgo
         _seq += ALL;
       }
       // write command sequence
-      _err = write(_seq);
-      // check for error
-      if( E_NO_ERROR != _err )
+      if( write(_seq) != _seq.size() )
         return NotConnected;
       // wait for status
       return waitForReady();
@@ -337,9 +328,7 @@ namespace Fkgo
         _seq += _bytes;
       }
       // write command sequence
-      qint64 _err = write(_seq);
-      // check for error
-      if( E_NO_ERROR != _err )
+      if( write(_seq) != _seq.size() )
         return NotConnected;
       // wait for finish
       return waitForReady();
@@ -379,9 +368,7 @@ namespace Fkgo
         _seq += (_address >> 16) & 0xff;
       }
       // write request sequence
-      qint64 _err = write(_seq);
-      // check for error
-      if( E_NO_ERROR != _err )
+      if( write(_seq) != _seq.size() )
         return NotConnected;
       // wait for the response data
       for( int i=0; i<15; ++i )
@@ -401,14 +388,15 @@ namespace Fkgo
       if( 0 == port_ || !port_->isWritable() )
         return NotConnected;
       qDebug() << "Connection::write: writing" << _bytes.size() << "byte(s) =" << _bytes.toHex();
+      qint64 _written = port_->write(_bytes);
       // write given bytes to port
-      if( port_->write(_bytes) < 0 )
+      if( _written < 0 )
         // failed
-        return E_WRITE_FAILED;
+        return _written;
       // flush port
       port_->flush();
       // ok
-      return E_NO_ERROR;
+      return _written;
     }
     qint64 Connection::write( char _byte )
     {

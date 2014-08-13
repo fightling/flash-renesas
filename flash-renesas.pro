@@ -4,9 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core
-
-QT       -= gui
+QT       += core serialport
 
 include( common.pri )
 
@@ -15,11 +13,6 @@ CONFIG   += console
 CONFIG   -= app_bundle
 
 TEMPLATE = app
-
-INCLUDEPATH += ../qextserialport/src
-LIBS += -L../qextserialport
-CONFIG += extserialport
-LIBS += -lQt5ExtSerialPort
 
 HEADERS += $$files(*.h) 
 SOURCES += $$files(*.cpp) 

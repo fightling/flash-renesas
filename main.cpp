@@ -20,7 +20,7 @@ int main(int _argc, char *_argv[])
   QCoreApplication _a(_argc, _argv);
   {
     _a.setApplicationName("flash-renesas");
-    _a.setApplicationVersion("0.1");
+    _a.setApplicationVersion("0.2");
   }
   // initialize argument parser
   QCommandLineParser _parser;

@@ -1,4 +1,4 @@
-#include <qextserialport.h>
+#include <QSerialPort>
 
 namespace Fkgo
 {
@@ -54,7 +54,7 @@ namespace Fkgo
       /// initiate communication at low baud rate
       Status autoBaud();
       /// return currently used baud rate
-      BaudRateType baud() const;
+      QSerialPort::BaudRate baud() const;
       /// negotiate optimal baud rate
       Status baudRate();
       /// query version string from microcontroller
@@ -82,7 +82,7 @@ namespace Fkgo
 
     private:
       /// current communication port
-      QextSerialPort *port_;
+      QSerialPort *port_;
       /// name of the current communication port
       QString portName_;
       /// current device type
