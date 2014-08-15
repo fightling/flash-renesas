@@ -81,7 +81,6 @@ namespace Fkgo
        * @param _count bytes to read 
        */
       QByteArray read( int _count );
-      QByteArray readLine();
 
     private:
       /// current communication port
