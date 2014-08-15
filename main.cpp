@@ -9,6 +9,12 @@
 
 #define HEX(x) QString::number(x,16)
 
+QString progress( int _cur, int _max, int _len ) 
+{
+  int _step = _max/_len;
+  return QString() + "[" + QString(_cur/_step+1,'#') + QString(_max/_step-_cur/_step-1,'.') + "] " + QString::number(100*_cur/_max+1) + "%";
+}
+
 /** @brief main routine
  * @param _argc argument count
  * @param _argv argument array
@@ -95,6 +101,7 @@ int main(int _argc, char *_argv[])
     if( Connection::Ready != _c.baudRate() )
     {
       _err << "ERROR: cannot negotiate baud rate" << endl;
+      _out << "No response at 9600 baud. You may reset the controller and try again." << endl;
       exit(-1);
     }
     _out << "negotiated baud rate: " << _c.baud() << endl;
@@ -109,10 +116,10 @@ int main(int _argc, char *_argv[])
     // unlock the microcontroller with the ID given by argument
     if( _id.isEmpty() )
     {
-      _id = QByteArray(7,0); 
+      _id = QByteArray(7,0);
       if( Connection::Locked == _c.unlock(_id) )
       {
-        _id = QByteArray(7,0xff); 
+        _id = QByteArray(7,0xff);
         if( Connection::Ready != _c.unlock(_id) )
         {
           _err << "ERROR: unlocking failed" << endl;
@@ -155,14 +162,15 @@ int main(int _argc, char *_argv[])
   unsigned long _start = file.readImage(_image);
   _out << "Writing image from " << HEX(_start) << " to " << HEX(_start+_image.size()-1) << " = " << _image.size()/1024 << "KB" << endl;
   unsigned long _count=0;
-  for( int _cur = 0; _cur < _image.size(); _cur += 0x100)
+  for( int _cur = 0; _cur < _image.size(); _cur += 0x100 )
   {
     QByteArray _page = _image.mid(_cur, 0x100);
     if( _page != _blank )
     {
       if( !_port.isEmpty() )
       {
-        _out << "Writing page at address " << HEX(_start + _cur) << "\r" << flush;
+        _out << "\rWriting page at address " << HEX(_start + _cur) << " " << progress(_cur,_image.size(),60) << "     \b\b\b\b" << flush;
+        // program current page
         if( Connection::Ready != _c.programPage( _start + _cur, _page ) )
         {
           _err << "ERROR: programming page failed" << endl;
@@ -174,7 +182,7 @@ int main(int _argc, char *_argv[])
       _count++;
     }
   }
-  _out << "\n" << _count << " relevant pages = " << (_count*0x100)/1024 << "KB at " << HEX(_start) << ".." << HEX(_start + _image.size()-1) << endl;
+  _out << "\n" << _count << " relevant pages = " << (_count*0x100)/1024 << "KB" << endl;
   return 0;//_a.exec();
 }
 
