@@ -434,45 +434,25 @@ namespace Fkgo
         qDebug() << "Connection::read: not readable";
         return QByteArray();
       }
+      // wait 1 second for response
       if( !port_->waitForReadyRead(1000) )
       {
         qDebug() << "Connection::read: timeout";
         return QByteArray();
       }
+      // read the requestes amount of bytes
       QByteArray _result = port_->read(_count);
+      // retry to read bytes until complete or timeout 
       for( int _i=0; _i<1000 && _result.size() < _count; ++_i )
       {
         port_->waitForReadyRead(10);
         _result += port_->read(_count-_result.size());
       }
+      // could not read enough bytes?
       if( _result.size() != _count )
-        qDebug() << "Connection::read: could not read the requested number of bytes!";
+        qDebug() << "Connection::read: could not read the requested number of bytes!";a
+      // report
       qDebug() << "Connection::read: read" << _result.size() << "/" << _count << "byte(s) =" << _result.toHex();
-      return _result;
-    }
-    QByteArray Connection::readLine()
-    {
-      // check if the port is open
-      if( 0 == port_ )
-      {
-        qDebug() << "Connection::readLine: not connected";
-        return QByteArray();
-      }
-      // check if port is readable
-      if( !port_->isReadable() )
-      {
-        qDebug() << "Connection::readLine: not readable";
-        return QByteArray();
-      }
-      if( !port_->waitForReadyRead(1000) )
-      {
-        qDebug() << "Connection::readLine: timeout";
-        return QByteArray();
-      }
-      for( int _i=0; _i<1000 && !port_->canReadLine(); ++_i )
-        QThread::msleep(1);
-      QByteArray _result = port_->readLine();
-      qDebug() << "Connection::readLine: read" << _result.size() << "byte(s) =" << _result.toHex();
       return _result;
     }
   }
