@@ -8,16 +8,6 @@ Prerequisites
 
 You must have installed the QT 5.3 runtime (see http://qt-project.org/downloads).
 
-Download, build and install qextserialport library from google code:
-
-```
-  git clone https://code.google.com/p/qextserialport
-  cd qextserialport
-  qmake qextserialport.pro
-  make
-  make install
-```
-
 Installation
 ------------
 
