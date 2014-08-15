@@ -1,6 +1,7 @@
 #include "Connection.h"
 #include <QThread>
 #include <QDebug>
+#include <QSerialPortInfo>
 
 namespace Fkgo
 {
@@ -22,7 +23,7 @@ namespace Fkgo
       /// request remote status
       GET_STATUS    = 0x70,
 
-      /// set remote baud rate 
+      /// set remote baud rate
       BAUD_9600     = 0xB0,
       BAUD_19200,
       BAUD_38400,
@@ -45,7 +46,7 @@ namespace Fkgo
     }
     Connection::~Connection()
     {
-      // close port 
+      // close port
       close();
     }
     void Connection::open( const QString& _portName, Device _device )
@@ -68,7 +69,7 @@ namespace Fkgo
         port_->setParity(QSerialPort::NoParity);
         port_->setDataBits(QSerialPort::Data8);
         // opern port
-        if (port_->open(QIODevice::ReadWrite) == true)
+        if( port_->open(QIODevice::ReadWrite) )
           qDebug() << "Connection::Connection: successfully opened port" << _portName;
         else
         {
@@ -93,7 +94,7 @@ namespace Fkgo
     Connection::Status Connection::autoBaud()
     {
       qDebug() << "Connection::autoBaud: connection to remote site";
-      // check if port is open 
+      // check if port is open
       if( 0 == port_ )
       {
         qDebug() << "Connection::autoBaud: not connected";
@@ -114,7 +115,7 @@ namespace Fkgo
         QThread::msleep(40);
       }
       // read any garbage from the port
-      read();
+      port_->clear();
       return Ready;
     }
     Connection::Status Connection::baudRate()
@@ -133,7 +134,7 @@ namespace Fkgo
         return NotConnected;
       }
       // check if reply is unexpected
-      if( read() != QByteArray(1,BAUD_9600) )
+      if( read(1) != QByteArray(1,BAUD_9600) )
       {
         qDebug() << "Connection::baudRate: no response";
         // report failure
@@ -149,7 +150,7 @@ namespace Fkgo
       }
       _alternatives[] =
       {
-//        { BAUD_115200, BAUD115200 },
+        { BAUD_115200, QSerialPort::Baud115200 },
         { BAUD_57600, QSerialPort::Baud57600 },
         { BAUD_38400, QSerialPort::Baud38400 },
         { BAUD_19200, QSerialPort::Baud19200 },
@@ -159,19 +160,22 @@ namespace Fkgo
       // try to improve the baud rate
       for( size_t i=0; _alternatives[i].cmd_; ++i )
       {
-        qDebug() << "Connection::Connection: asking for baud rate " << _alternatives[i].sys_;
-        // send baud rate command
-        write(_alternatives[i].cmd_);
-        // wait
-        QThread::msleep(10);
-        // check if reply is unexpected
-        if( read() == QByteArray(1,_alternatives[i].cmd_) )
+        if( QSerialPortInfo::standardBaudRates().contains(_alternatives[i].sys_) )
         {
-          // improve baud rate
-          qDebug() << "Connection::Connection: set baud rate to" << _alternatives[i].sys_;
-          port_->setBaudRate(_alternatives[i].sys_);
-          // cancel baud rate improvement
-          return Ready;
+          qDebug() << "Connection::Connection: asking for baud rate " << _alternatives[i].sys_;
+          // send baud rate command
+          write(_alternatives[i].cmd_);
+          // wait
+          QThread::msleep(10);
+          // check if reply is unexpected
+          if( read(1) == QByteArray(1,_alternatives[i].cmd_) )
+          {
+            // improve baud rate
+            qDebug() << "Connection::Connection: set baud rate to" << _alternatives[i].sys_;
+            port_->setBaudRate(_alternatives[i].sys_);
+            // cancel baud rate improvement
+            return Ready;
+          }
         }
       }
       return Ready;
@@ -197,7 +201,7 @@ namespace Fkgo
         return NotConnected;
       }
       // read version string
-      _version = read();
+      _version = read(8);
       // success
       return Ready;
     }
@@ -217,7 +221,7 @@ namespace Fkgo
         if( write(GET_STATUS) != 1 )
           return NotConnected;
         // read response
-        QByteArray result = read();
+        QByteArray result = read(2);
         // check result
         if( 2 != result.size() )
           continue;
@@ -226,7 +230,7 @@ namespace Fkgo
         bool _eraseFailed = 0x10 == (result[0] & 0x10);
         bool _locked = 0x0C != (result[1] & 0x0C);
         qDebug() << "Connection::status: got ready =" << _ready << ", erase failed =" << _eraseFailed << ", locked =" << _locked;
-        // priorize status flags 
+        // priorize status flags
         if( !_ready )
           return Busy;
         if( _eraseFailed )
@@ -373,7 +377,7 @@ namespace Fkgo
       // wait for the response data
       for( int i=0; i<15; ++i )
       {
-        _bytes = read();
+        _bytes = read(256);
         if( _bytes.size() == 256 )
           break;
         // wait a 20th second
@@ -390,11 +394,18 @@ namespace Fkgo
       qDebug() << "Connection::write: writing" << _bytes.size() << "byte(s) =" << _bytes.toHex();
       qint64 _written = port_->write(_bytes);
       // write given bytes to port
-      if( _written < 0 )
+      if( _written != _bytes.size() )
+      {
+        qDebug() << "Connection::write: ERROR: Could only write" << _written << "of" << _bytes.size() << "byte(s)";
         // failed
         return _written;
+      }
       // flush port
-      port_->flush();
+      if( !port_->waitForBytesWritten(1000) )
+      {
+        qDebug() << "Connection::write: ERROR: Write timeout";
+        return 0;
+      }
       // ok
       return _written;
     }
@@ -408,8 +419,9 @@ namespace Fkgo
       // send byte
       return write(_seq);
     }
-    QByteArray Connection::read()
+    QByteArray Connection::read( int _count )
     {
+      Q_ASSERT(_count>0);
       // check if the port is open
       if( 0 == port_ )
       {
@@ -422,16 +434,45 @@ namespace Fkgo
         qDebug() << "Connection::read: not readable";
         return QByteArray();
       }
-      for( int i=0; i<1000 && 0 == port_->bytesAvailable(); ++i )
-        QThread::msleep(1);
-      if( 0 == port_->bytesAvailable() )
+      if( !port_->waitForReadyRead(1000) )
       {
         qDebug() << "Connection::read: timeout";
         return QByteArray();
       }
-      QThread::msleep(20);
+      QByteArray _result = port_->read(_count);
+      for( int _i=0; _i<1000 && _result.size() < _count; ++_i )
+      {
+        port_->waitForReadyRead(10);
+        _result += port_->read(_count-_result.size());
+      }
+      if( _result.size() != _count )
+        qDebug() << "Connection::read: could not read the requested number of bytes!";
+      qDebug() << "Connection::read: read" << _result.size() << "/" << _count << "byte(s) =" << _result.toHex();
+      return _result;
+    }
+    QByteArray Connection::readLine()
+    {
+      // check if the port is open
+      if( 0 == port_ )
+      {
+        qDebug() << "Connection::readLine: not connected";
+        return QByteArray();
+      }
+      // check if port is readable
+      if( !port_->isReadable() )
+      {
+        qDebug() << "Connection::readLine: not readable";
+        return QByteArray();
+      }
+      if( !port_->waitForReadyRead(1000) )
+      {
+        qDebug() << "Connection::readLine: timeout";
+        return QByteArray();
+      }
+      for( int _i=0; _i<1000 && !port_->canReadLine(); ++_i )
+        QThread::msleep(1);
       QByteArray _result = port_->readLine();
-      qDebug() << "Connection::read: read" << _result.size() << "byte(s) =" << _result.toHex();
+      qDebug() << "Connection::readLine: read" << _result.size() << "byte(s) =" << _result.toHex();
       return _result;
     }
   }

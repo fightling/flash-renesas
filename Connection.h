@@ -77,8 +77,11 @@ namespace Fkgo
       qint64 write( const QByteArray& _bytes );
       /// write a single byte to the microcontroller 
       qint64 write( char _byte );
-      /// read what has been received from the microcontroller recently
-      QByteArray read();
+      /** @brief read what has been received from the microcontroller recently
+       * @param _count bytes to read 
+       */
+      QByteArray read( int _count );
+      QByteArray readLine();
 
     private:
       /// current communication port

@@ -110,7 +110,7 @@ int main(int _argc, char *_argv[])
     if( _id.isEmpty() )
     {
       _id = QByteArray(7,0); 
-      if( Connection::Ready != _c.unlock(_id) )
+      if( Connection::Locked == _c.unlock(_id) )
       {
         _id = QByteArray(7,0xff); 
         if( Connection::Ready != _c.unlock(_id) )
