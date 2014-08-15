@@ -450,7 +450,7 @@ namespace Fkgo
       }
       // could not read enough bytes?
       if( _result.size() != _count )
-        qDebug() << "Connection::read: could not read the requested number of bytes!";a
+        qDebug() << "Connection::read: could not read the requested number of bytes!";
       // report
       qDebug() << "Connection::read: read" << _result.size() << "/" << _count << "byte(s) =" << _result.toHex();
       return _result;
