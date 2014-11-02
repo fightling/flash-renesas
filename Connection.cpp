@@ -334,6 +334,7 @@ namespace Fkgo
       // write command sequence
       if( write(_seq) != _seq.size() )
         return NotConnected;
+      QThread::msleep(20);
       // wait for finish
       return waitForReady();
     }
