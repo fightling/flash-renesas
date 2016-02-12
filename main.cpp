@@ -9,7 +9,7 @@
 
 #define HEX(x) QString::number(x,16)
 
-QString progress( int _cur, int _max, int _len ) 
+QString progress( int _cur, int _max, int _len )
 {
   int _step = _max/_len;
   return QString() + "[" + QString(_cur/_step+1,'#') + QString(_max/_step-_cur/_step-1,'.') + "] " + QString::number(100*_cur/_max+1) + "%";
@@ -85,6 +85,21 @@ int main(int _argc, char *_argv[])
     }
   }
   using namespace Fkgo::Programmer;
+  {
+    QFileInfo info(_mot);
+    _out << "Opening MOT file: '" << info.fileName() << "'  " << info.lastModified().toString() << endl;
+  }
+  MotFile file(_mot);
+  if( !file.open(QIODevice::ReadOnly | QIODevice::Text) )
+  {
+    _err << "ERROR: MOT file not found" << endl;
+    exit(-1);
+  }
+  if( file.read().type() != SRecord::Header )
+  {
+    _err << "ERROR: unexpected file format" << endl;
+    exit(-1);
+  }
   // create connection to the port given by parameter
   Connection _c;
   if( !_port.isEmpty() )
@@ -141,21 +156,6 @@ int main(int _argc, char *_argv[])
       exit(-1);
     }
   }
-  {
-    QFileInfo info(_mot);
-    _out << "Opening MOT file: '" << info.fileName() << "'  " << info.lastModified().toString() << endl;
-  }
-  MotFile file(_mot);
-  if( !file.open(QIODevice::ReadOnly | QIODevice::Text) )
-  {
-    _err << "ERROR: MOT file not found" << endl;
-    exit(-1);
-  }
-  if( file.read().type() != SRecord::Header )
-  {
-    _err << "ERROR: unexpected file format" << endl;
-    exit(-1);
-  }
   QByteArray _image;
   // blank page
   const QByteArray _blank(0x100,0xff);
@@ -185,4 +185,3 @@ int main(int _argc, char *_argv[])
   _out << "\n" << _count << " relevant pages = " << (_count*0x100)/1024 << "KB" << endl;
   return 0;//_a.exec();
 }
-
